@@ -27,7 +27,7 @@ namespace wled {
 class WLEDLightOutput : public light::AddressableLight {
  public:
   explicit WLEDLightOutput(int num_leds) {
-    num_leds_ = num_leds;
+    this->num_leds_ = num_leds;
     this->leds_ = new Color[num_leds];  // NOLINT
     for (int i = 0; i < num_leds; i++)
       this->leds_[i] = Color::BLACK;
@@ -43,6 +43,7 @@ class WLEDLightOutput : public light::AddressableLight {
 
   void setup() override;
   void dump_config() override;
+  // void loop() override;
   void write_state(light::LightState *state) override;
   float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
@@ -53,7 +54,7 @@ class WLEDLightOutput : public light::AddressableLight {
 
   void on_shutdown() override;
 
-  inline int32_t size() const override { return 10; }
+  inline int32_t size() const override { return num_leds_; }
 
   void set_address(network::IPAddress address) { this->address_ = IPAddress((uint32_t)address); }
   void set_port(uint16_t port) { this->port_ = port; }

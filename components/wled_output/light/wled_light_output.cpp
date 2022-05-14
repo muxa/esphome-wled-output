@@ -37,16 +37,40 @@ void WLEDLightOutput::setup() {
   // Init UDP lazily
   if (!udp_) {
     udp_ = make_unique<WiFiUDP>();
+  }
+}
 
-    if (!udp_->beginPacket(address_, port_)) {
-      ESP_LOGW(TAG, "Cannot connect WLEDLightOutput to %d.", port_);
-      return;
-    }
-    // Byte 0 of the UDP packet tells the server which realtime protocol to use.
-    udp_->write(WARLS);
+void WLEDLightOutput::dump_config() {
+  ESP_LOGCONFIG(TAG, "WLED Light Output:");
+  ESP_LOGCONFIG(TAG, "  Num LEDs: %u", this->num_leds_);
+  //ESP_LOGCONFIG(TAG, "  Max refresh rate: %u", *this->max_refresh_rate_);
+}
 
-    // In every protocol, Byte 1 tells the server how many seconds to wait after the last received packet before returning to normal mode, in practice you should use 1-2 (seconds) here in most cases so that the module returns to normal mode quickly after the end of transmission. Use 255 to stay on the UDP data without a timeout until a request is requested via another method.
-    udp_->write(5);
+// void WLEDLightOutput::loop() {
+  
+// }
+
+void WLEDLightOutput::write_state(light::LightState *state) {
+  if (!state->remote_values.is_on())
+    return;
+
+  // send packets here
+
+  if (!udp_->beginPacket(address_, port_)) {
+    ESP_LOGW(TAG, "Cannot connect WLEDLightOutput to %d.", port_);
+    return;
+  }
+
+  // Byte 0 of the UDP packet tells the server which realtime protocol to use.
+  udp_->write(WARLS);
+
+  // In every protocol, Byte 1 tells the server how many seconds to wait after the last received packet before returning to normal mode, 
+  // in practice you should use 1-2 (seconds) here in most cases so that the module returns to normal mode quickly after the end of transmission. 
+  // Use 255 to stay on the UDP data without a timeout until a request is requested via another method.
+  udp_->write(1);
+
+  for (int i=0; i<this->num_leds_; i++) {
+
 
     // After this the LED color information is transmitted like this:
     // WARLS
@@ -56,25 +80,22 @@ void WLEDLightOutput::setup() {
     // 4 + n*4	Green Value
     // 5 + n*4	Blue Value
 
-    udp_->write(0); udp_->write(255); udp_->write(0); udp_->write(0);
-    udp_->write(1); udp_->write(0); udp_->write(255); udp_->write(0);
-    udp_->write(3); udp_->write(0); udp_->write(0); udp_->write(255);
-
-    if (!udp_->endPacket()) {
-      ESP_LOGW(TAG, "Cannot send packet from WLEDLightOutput to %d.", port_);
-      return;
-    }
+    udp_->write(i); 
+    udp_->write(this->leds_[i].r); 
+    udp_->write(this->leds_[i].g); 
+    udp_->write(this->leds_[i].b);
   }
-}
 
-void WLEDLightOutput::dump_config() {
-  ESP_LOGCONFIG(TAG, "WLED Light Output:");
-  ESP_LOGCONFIG(TAG, "  Num LEDs: %u", this->num_leds_);
-  //ESP_LOGCONFIG(TAG, "  Max refresh rate: %u", *this->max_refresh_rate_);
-}
-void WLEDLightOutput::write_state(light::LightState *state) {
-  // TODO: send packets here
-  this->mark_shown_();
+  if (!udp_->endPacket()) {
+    ESP_LOGW(TAG, "Cannot send packet from WLEDLightOutput to %d.", port_);
+    return;
+  }
+
+  // this->mark_shown_();
+  // if (state->remote_values.is_on()) {
+    
+  // }
+  this->schedule_show();
 }
 
 }  // namespace wled
