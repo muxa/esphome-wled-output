@@ -56,6 +56,8 @@ void WLEDLightOutput::write_state(light::LightState *state) {
 
   // send packets here
 
+  uint32_t start_micros = micros();
+
   if (!udp_->beginPacket(address_, port_)) {
     ESP_LOGW(TAG, "Cannot connect WLEDLightOutput to %d.", port_);
     return;
@@ -71,6 +73,10 @@ void WLEDLightOutput::write_state(light::LightState *state) {
 
   for (int i=0; i<this->num_leds_; i++) {
 
+    if (this->leds_last_state[i].r == this->leds_[i].r &&
+      this->leds_last_state[i].g == this->leds_[i].g &&
+      this->leds_last_state[i].b == this->leds_[i].b)
+      continue;
 
     // After this the LED color information is transmitted like this:
     // WARLS
@@ -78,17 +84,27 @@ void WLEDLightOutput::write_state(light::LightState *state) {
     // 2 + n*4	LED Index
     // 3 + n*4	Red Value
     // 4 + n*4	Green Value
-    // 5 + n*4	Blue Value
+    // 5 + n*4	Blue Value    
 
     udp_->write(i); 
     udp_->write(this->leds_[i].r); 
     udp_->write(this->leds_[i].g); 
     udp_->write(this->leds_[i].b);
+
+    this->leds_last_state[i] = this->leds_[i];
   }
 
   if (!udp_->endPacket()) {
     ESP_LOGW(TAG, "Cannot send packet from WLEDLightOutput to %d.", port_);
     return;
+  }
+
+  start_micros = micros() - start_micros;
+  this->write_duration_ += start_micros;
+  this->write_count_++;
+
+  if (this->write_count_ % 50 == 0) {
+    ESP_LOGD(TAG, "Write duration: %d us (%d us avg)", start_micros, this->write_duration_ / this->write_count_);
   }
 
   // this->mark_shown_();

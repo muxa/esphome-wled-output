@@ -29,8 +29,11 @@ class WLEDLightOutput : public light::AddressableLight {
   explicit WLEDLightOutput(int num_leds) {
     this->num_leds_ = num_leds;
     this->leds_ = new Color[num_leds];  // NOLINT
-    for (int i = 0; i < num_leds; i++)
+    this->leds_last_state = new Color[num_leds];  // NOLINT
+    for (int i = 0; i < num_leds; i++) {
       this->leds_[i] = Color::BLACK;
+      this->leds_last_state[i] = Color::WHITE; // init to differ color to change 
+    }
     this->effect_data_ = new uint8_t[num_leds];  // NOLINT
   }
 
@@ -71,8 +74,12 @@ class WLEDLightOutput : public light::AddressableLight {
   }
 
   Color *leds_{nullptr};
+  Color *leds_last_state{nullptr};
   uint8_t *effect_data_{nullptr};
   int num_leds_{0};
+  
+  uint32_t write_count_{0};
+  uint32_t write_duration_{0};
 };
 
 }  // namespace wled
