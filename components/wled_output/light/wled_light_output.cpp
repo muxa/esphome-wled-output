@@ -73,10 +73,8 @@ void WLEDLightOutput::write_state(light::LightState *state) {
 
   for (int i=0; i<this->num_leds_; i++) {
 
-    if (this->leds_last_state[i].r == this->leds_[i].r &&
-      this->leds_last_state[i].g == this->leds_[i].g &&
-      this->leds_last_state[i].b == this->leds_[i].b)
-      continue;
+    if (this->leds_last_state[i].raw_32 == this->leds_[i].raw_32)
+      continue; // no change in LED
 
     // After this the LED color information is transmitted like this:
     // WARLS
