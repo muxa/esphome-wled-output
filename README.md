@@ -10,7 +10,7 @@ Control external WLED from ESPHome.
 external_components:
   - source:
       type: git
-      url: https://github.com/muxa/esphome-wled-output
+      url: https://github.com/fabio-garavini/esphome-wled-output
 
 ```
 
