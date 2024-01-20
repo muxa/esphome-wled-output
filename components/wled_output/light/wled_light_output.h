@@ -59,7 +59,7 @@ class WLEDLightOutput : public light::AddressableLight {
 
   inline int32_t size() const override { return num_leds_; }
 
-  void set_address(network::IPAddress address) { this->address_ = IPAddress((uint32_t)address); }
+  void set_address(network::IPAddress address) { this->address_ = address; }
   void set_port(uint16_t port) { this->port_ = port; }
 
 
